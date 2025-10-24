@@ -37,6 +37,15 @@ export class RegisterComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
+  onRegister() {
+    // TODO: Implement registration logic, for now just navigate to login
+    this.router.navigate(['/login']);
+  }
+
+  onLoginLink() {
+    this.router.navigate(['/login']);
+  }
+
   onGoogleRegisterClick() {
     if ((window as any).google && this.googleInitialized) {
       google.accounts.id.prompt();

@@ -45,6 +45,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
+  onLogin() {
+    // TODO: Implement login logic, for now navigate to register if not registered
+    this.router.navigate(['/register']);
+  }
+
+  onRegisterLink() {
+    this.router.navigate(['/register']);
+  }
+
   onGoogleSignInClick() {
     if ((window as any).google && this.googleInitialized) {
       // Trigger the Google One Tap prompt or request a credential

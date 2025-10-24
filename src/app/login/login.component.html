@@ -1,6 +1,6 @@
 <div class="login-container">
   <h2>Login</h2>
-  <form class="login-form">
+  <form class="login-form" (ngSubmit)="onLogin()">
     <div class="form-group">
       <label for="email">Email</label>
       <input type="email" id="email" name="email" required>
@@ -9,7 +9,7 @@
       <label for="password">Password</label>
       <input type="password" id="password" name="password" required>
     </div>
-    <button type="submit" class="login-btn">Login</button>
+    <button type="submit" class="login-btn" (click)="onLogin()">Login</button>
   </form>
   <div class="divider">or</div>
   <button class="google-btn" (click)="onGoogleSignInClick()">
@@ -21,5 +21,5 @@
     </svg>
     Login with Google
   </button>
-  <p>Don't have an account? <a routerLink="/register">Register</a></p>
+  <button class="register-link-btn" (click)="onRegisterLink()">Don't have an account? Register</button>
 </div>
