@@ -33,17 +33,15 @@ pipeline {
                 script {
                     echo "🔧 Setting up Node.js ${NODE_VERSION}..."
                 }
-                sh '''
-                    # Install Node.js 18 using nvm (if available) or use system Node.js
-                    if command -v nvm &> /dev/null; then
-                        source ~/.nvm/nvm.sh
-                        nvm install ${NODE_VERSION}
-                        nvm use ${NODE_VERSION}
-                    fi
-                    
-                    # Verify Node.js and npm versions
+                bat '''
+                    @echo off
+                    REM Verify Node.js and npm versions (assuming Node.js is already installed)
                     node --version
                     npm --version
+                    if errorlevel 1 (
+                        echo ERROR: Node.js or npm not found. Please install Node.js first.
+                        exit /b 1
+                    )
                 '''
             }
         }
@@ -54,15 +52,21 @@ pipeline {
                 script {
                     echo '📥 Installing npm dependencies...'
                 }
-                sh '''
-                    # Clean install to ensure fresh dependencies
-                    npm ci --prefer-offline --no-audit || npm install
+                bat '''
+                    @echo off
+                    REM Clean install to ensure fresh dependencies
+                    npm ci --prefer-offline --no-audit
+                    if errorlevel 1 (
+                        echo npm ci failed, trying npm install...
+                        npm install
+                    )
                     
-                    # Verify node_modules exists
-                    if [ ! -d "node_modules" ]; then
-                        echo "ERROR: node_modules directory not found after installation"
-                        exit 1
-                    fi
+                    REM Verify node_modules exists
+                    if not exist node_modules (
+                        echo ERROR: node_modules directory not found after installation
+                        exit /b 1
+                    )
+                    echo Dependencies installed successfully!
                 '''
             }
         }
@@ -71,18 +75,26 @@ pipeline {
         stage('Build') {
             steps {
                 script {
-                    echo '🏗️  Building React application...'
+                    echo '🏗️  Building Angular application...'
                 }
-                sh '''
-                    # Run production build
+                bat '''
+                    @echo off
+                    REM Run production build
                     npm run build
+                    if errorlevel 1 (
+                        echo ERROR: Build failed!
+                        exit /b 1
+                    )
                     
-                    # Verify build output exists
-                    if [ ! -d "build" ] && [ ! -d "dist" ]; then
-                        echo "ERROR: Build output directory not found"
-                        echo "Expected 'build' or 'dist' directory"
-                        exit 1
-                    fi
+                    REM Verify build output exists
+                    if not exist build (
+                        if not exist dist (
+                            echo ERROR: Build output directory not found
+                            echo Expected 'build' or 'dist' directory
+                            exit /b 1
+                        )
+                    )
+                    echo Build completed successfully!
                 '''
             }
         }
@@ -93,34 +105,38 @@ pipeline {
                 script {
                     echo '✅ Verifying build artifacts...'
                 }
-                sh '''
-                    # Determine build output directory (React typically uses 'build', some configs use 'dist')
-                    BUILD_DIR=""
-                    if [ -d "build" ]; then
-                        BUILD_DIR="build"
-                    elif [ -d "dist" ]; then
-                        BUILD_DIR="dist"
-                    else
-                        echo "ERROR: No build output directory found"
-                        exit 1
-                    fi
+                bat '''
+                    @echo off
+                    REM Determine build output directory (Angular uses 'dist', React uses 'build')
+                    set BUILD_DIR=
+                    if exist build (
+                        set BUILD_DIR=build
+                    ) else (
+                        if exist dist (
+                            set BUILD_DIR=dist
+                        ) else (
+                            echo ERROR: No build output directory found
+                            exit /b 1
+                        )
+                    )
                     
-                    # Check if index.html exists (required for React apps)
-                    if [ ! -f "${BUILD_DIR}/index.html" ]; then
-                        echo "ERROR: index.html not found in ${BUILD_DIR}"
-                        exit 1
-                    fi
+                    REM Check if index.html exists (required for Angular apps)
+                    if not exist "%BUILD_DIR%\\index.html" (
+                        echo ERROR: index.html not found in %BUILD_DIR%
+                        exit /b 1
+                    )
                     
-                    # Check if static assets directory exists
-                    if [ ! -d "${BUILD_DIR}/static" ] && [ ! -d "${BUILD_DIR}/assets" ]; then
-                        echo "WARNING: Static assets directory not found, but continuing..."
-                    fi
+                    REM Check if static assets directory exists
+                    if not exist "%BUILD_DIR%\\static" (
+                        if not exist "%BUILD_DIR%\\assets" (
+                            echo WARNING: Static assets directory not found, but continuing...
+                        )
+                    )
                     
-                    # Display build size information
-                    echo "Build verification successful!"
-                    echo "Build directory: ${BUILD_DIR}"
-                    echo "Build size: $(du -sh ${BUILD_DIR} | cut -f1)"
-                    echo "Number of files: $(find ${BUILD_DIR} -type f | wc -l)"
+                    REM Display build size information
+                    echo Build verification successful!
+                    echo Build directory: %BUILD_DIR%
+                    for /f %%i in ('dir /s /-c "%BUILD_DIR%" ^| find "File(s)"') do echo Build info: %%i
                 '''
             }
         }
