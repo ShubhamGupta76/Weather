@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 interface WeatherResponse {
   main: {
@@ -35,7 +36,7 @@ export class SearchComponent {
       return;
     }
     this.error = '';
-    this.http.get<WeatherResponse>(`http://localhost:8080/api/weather/${this.city}`)
+    this.http.get<WeatherResponse>(`${environment.apiBaseUrl}/api/weather/${this.city}`)
       .subscribe({
         next: (data) => {
           this.weatherData = data;

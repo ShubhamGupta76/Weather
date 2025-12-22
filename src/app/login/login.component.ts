@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 declare const google: any;
 
@@ -19,7 +20,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (typeof window !== 'undefined' && (window as any).google && !this.googleInitialized) {
       try {
         google.accounts.id.initialize({
-          client_id: 'YOUR_GOOGLE_CLIENT_ID', // TODO: replace
+          client_id: environment.googleClientId,
           callback: (response: any) => this.handleCredentialResponse(response),
         });
 
