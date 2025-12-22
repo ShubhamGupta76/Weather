@@ -107,6 +107,7 @@ pipeline {
                 }
                 bat '''
                     @echo off
+                    setlocal enabledelayedexpansion
                     REM Determine build output directory (Angular uses 'dist', React uses 'build')
                     set BUILD_DIR=
                     if exist build (
@@ -120,23 +121,49 @@ pipeline {
                         )
                     )
                     
-                    REM Check if index.html exists (required for Angular apps)
-                    if not exist "%BUILD_DIR%\\index.html" (
-                        echo ERROR: index.html not found in %BUILD_DIR%
-                        exit /b 1
-                    )
+                    echo Checking build output in: %BUILD_DIR%
+                    echo Listing contents of %BUILD_DIR%:
+                    dir /b %BUILD_DIR%
+                    echo.
                     
-                    REM Check if static assets directory exists
-                    if not exist "%BUILD_DIR%\\static" (
-                        if not exist "%BUILD_DIR%\\assets" (
-                            echo WARNING: Static assets directory not found, but continuing...
+                    REM Search for index.html recursively (Angular 17+ might have nested structure)
+                    set INDEX_FOUND=0
+                    for /r "%BUILD_DIR%" %%f in (index.html) do (
+                        if exist "%%f" (
+                            echo Found index.html at: %%f
+                            set INDEX_FOUND=1
+                            goto :found
                         )
                     )
                     
+                    REM Check root of BUILD_DIR
+                    if exist "%BUILD_DIR%\\index.html" (
+                        echo Found index.html at: %BUILD_DIR%\\index.html
+                        set INDEX_FOUND=1
+                        goto :found
+                    )
+                    
+                    REM Check common Angular output paths
+                    if exist "%BUILD_DIR%\\weather-frontend\\browser\\index.html" (
+                        echo Found index.html at: %BUILD_DIR%\\weather-frontend\\browser\\index.html
+                        set INDEX_FOUND=1
+                        goto :found
+                    )
+                    
+                    :found
+                    if !INDEX_FOUND!==0 (
+                        echo ERROR: index.html not found in %BUILD_DIR% or subdirectories
+                        echo Searching for any HTML files...
+                        dir /s /b "%BUILD_DIR%\\*.html" 2>nul
+                        exit /b 1
+                    )
+                    
                     REM Display build size information
+                    echo.
                     echo Build verification successful!
                     echo Build directory: %BUILD_DIR%
-                    for /f %%i in ('dir /s /-c "%BUILD_DIR%" ^| find "File(s)"') do echo Build info: %%i
+                    echo Total files in build:
+                    dir /s "%BUILD_DIR%" | find /c /v ""
                 '''
             }
         }
