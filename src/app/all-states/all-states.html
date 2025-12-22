@@ -1,0 +1,42 @@
+<div class="all-states-container">
+  <div class="header">
+    <h1>All States Weather</h1>
+    <button (click)="refreshWeather()" class="refresh-btn">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  <div class="states-grid">
+    <div *ngFor="let state of states" class="state-card">
+      <div class="state-header">
+        <h3>{{ state.state }}</h3>
+        <span class="city-name">{{ state.city }}</span>
+      </div>
+      
+      <div *ngIf="state.loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+      
+      <div *ngIf="state.error && !state.loading" class="error">
+        <p>Failed to load</p>
+      </div>
+      
+      <div *ngIf="!state.loading && !state.error" class="weather-info">
+        <div class="temperature">
+          <span class="temp-value">{{ state.temperature }}°C</span>
+        </div>
+        <div class="weather-details">
+          <img *ngIf="state.icon" 
+               [src]="'http://openweathermap.org/img/wn/' + state.icon + '@2x.png'" 
+               alt="Weather icon"
+               class="weather-icon">
+          <p class="description">{{ state.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -2,9 +2,25 @@
   <div class="navbar-brand">
     <a routerLink="/">Weather App</a>
   </div>
-  <ul class="navbar-nav">
-    <li><a routerLink="/">Home</a></li>
-    <li><a routerLink="/login">Login</a></li>
-    <li><a routerLink="/register">Register</a></li>
-  </ul>
+  
+  <div class="navbar-content">
+    <div class="state-temps-row">
+      <div *ngFor="let state of stateTemps" class="state-temp-item">
+        <span *ngIf="state.loading" class="loading-dot">●</span>
+        <span *ngIf="!state.loading" class="state-name">{{ state.state }}</span>
+        <span *ngIf="!state.loading" class="temp">{{ state.temperature }}°C</span>
+        <img *ngIf="!state.loading && state.icon" 
+             [src]="'http://openweathermap.org/img/wn/' + state.icon + '.png'" 
+             alt="Weather icon"
+             class="temp-icon">
+      </div>
+    </div>
+    
+    <ul class="navbar-nav">
+      <li><a routerLink="/">Home</a></li>
+      <li><a routerLink="/all-states" class="all-states-btn">All States</a></li>
+      <li><a routerLink="/login">Login</a></li>
+      <li><a routerLink="/register">Register</a></li>
+    </ul>
+  </div>
 </nav>
