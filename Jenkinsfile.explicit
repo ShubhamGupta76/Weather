@@ -1,3 +1,7 @@
+// Alternative Jenkinsfile with explicit repository configuration
+// Use this if checkout scm continues to fail
+// Replace YOUR_CREDENTIAL_ID with your actual Jenkins credential ID
+
 pipeline {
     agent any
     
@@ -5,6 +9,10 @@ pipeline {
     environment {
         NODE_VERSION = '18'
         NPM_CONFIG_LOGLEVEL = 'error'
+        // Update these if needed
+        GIT_REPO_URL = 'https://github.com/ShubhamGupta76/Weather.git'
+        GIT_BRANCH = 'main'  // or 'master' depending on your default branch
+        GIT_CREDENTIAL_ID = 'YOUR_CREDENTIAL_ID'  // Replace with your credential ID
     }
     
     options {
@@ -22,49 +30,33 @@ pipeline {
             steps {
                 script {
                     echo '📦 Checking out source code from GitHub repository...'
-                    echo 'Repository URL: Check Jenkins job configuration'
-                    echo 'Using credentials: Check Jenkins job configuration'
-                    
-                    // Retry checkout up to 3 times with better error handling
-                    def maxRetries = 3
-                    def retryCount = 0
-                    def success = false
-                    
-                    while (retryCount < maxRetries && !success) {
-                        try {
-                            if (retryCount > 0) {
-                                echo "⚠️ Retry attempt ${retryCount} of ${maxRetries}..."
-                                sleep(time: retryCount * 2, unit: 'SECONDS')
-                            }
-                            
-                            // Use checkout scm
-                            checkout scm
-                            success = true
-                            echo '✅ Checkout completed successfully!'
-                            
-                        } catch (Exception e) {
-                            retryCount++
-                            echo "⚠️ Checkout error (attempt ${retryCount}/${maxRetries}): ${e.getMessage()}"
-                            
-                            if (retryCount >= maxRetries) {
-                                echo ''
-                                echo '❌ Checkout failed after all retry attempts.'
-                                echo ''
-                                echo 'Troubleshooting checklist:'
-                                echo '  1. Verify repository URL in Jenkins job configuration'
-                                echo '     Expected: https://github.com/ShubhamGupta76/Weather.git'
-                                echo '  2. Check if credentials are valid and have access'
-                                echo '     Credential ID: Check Jenkins job configuration'
-                                echo '  3. Verify repository exists and is accessible'
-                                echo '     Visit: https://github.com/ShubhamGupta76/Weather'
-                                echo '  4. Check network connectivity to GitHub'
-                                echo '  5. Verify Git is properly installed on Jenkins agent'
-                                echo '  6. If repository is private, ensure credentials have repo access'
-                                echo ''
-                                throw e
-                            }
-                        }
-                    }
+                    echo "Repository: ${env.GIT_REPO_URL}"
+                    echo "Branch: ${env.GIT_BRANCH}"
+                }
+                
+                // Explicit checkout with retry
+                retry(3) {
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "*/${env.GIT_BRANCH}"]],
+                        extensions: [
+                            [$class: 'CloneOption', 
+                             timeout: 30, 
+                             depth: 1, 
+                             shallow: true,
+                             noTags: false],
+                            [$class: 'CheckoutOption', timeout: 30]
+                        ],
+                        userRemoteConfigs: [[
+                            url: env.GIT_REPO_URL,
+                            credentialsId: env.GIT_CREDENTIAL_ID
+                        ]],
+                        doGenerateSubmoduleConfigurations: false
+                    ])
+                }
+                
+                script {
+                    echo '✅ Checkout completed successfully!'
                 }
             }
         }
