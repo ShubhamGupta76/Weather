@@ -33,13 +33,13 @@
     <div class="weather-display">
       <div class="weather-header">
         <h2>{{ weatherData.name }}</h2>
-        <p class="current-time">{{ formatDate(new Date()) }} - {{ formatTime(new Date()) }}</p>
+        <p class="current-time">{{ getCurrentDateString() }}</p>
       </div>
       
       <div class="weather-main">
         <div class="temperature-section">
           <div class="temp-value">{{ roundTemp(weatherData.main.temp) }}°C</div>
-          <div class="feels-like">Feels like {{ roundTemp(weatherData.main.feels_like) }}°C</div>
+          <div class="feels-like" *ngIf="weatherData.main.feels_like">Feels like {{ roundTempSafe(weatherData.main.feels_like) }}°C</div>
         </div>
         
         <div class="weather-icon-section">

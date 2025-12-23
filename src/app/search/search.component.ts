@@ -7,17 +7,22 @@ import { environment } from '../../environments/environment';
 interface WeatherResponse {
   main: {
     temp: number;
-    feels_like: number;
+    feels_like?: number;
+    temp_min?: number;
+    temp_max?: number;
     humidity: number;
-    pressure: number;
+    pressure?: number;
   };
   weather: {
     description: string;
     icon: string;
   }[];
-  name: string;
+  name?: string;
   dt: number;
   dt_txt?: string;
+  wind?: {
+    speed: number;
+  };
 }
 
 interface ForecastResponse {
@@ -203,5 +208,21 @@ export class SearchComponent {
   capitalize(text: string): string {
     if (!text) return '';
     return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  getCurrentDate(): Date {
+    return new Date();
+  }
+
+  getCurrentDateString(): string {
+    const now = new Date();
+    return `${this.formatDate(now)} - ${this.formatTime(now)}`;
+  }
+
+  roundTempSafe(temp: number | undefined): number {
+    if (temp === undefined || temp === null) {
+      return 0;
+    }
+    return Math.round(temp);
   }
 }
