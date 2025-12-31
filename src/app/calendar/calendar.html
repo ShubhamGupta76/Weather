@@ -1,0 +1,42 @@
+<div class="calendar-overlay" (click)="closeCalendar()" *ngIf="showCalendar()">
+  <div class="calendar-container" (click)="$event.stopPropagation()">
+    <div class="calendar-header">
+      <button class="nav-button" (click)="previousMonth()" type="button">‹</button>
+      <h2>{{ monthNames[currentDate().getMonth()] }} {{ currentDate().getFullYear() }}</h2>
+      <button class="nav-button" (click)="nextMonth()" type="button">›</button>
+    </div>
+    
+    <div class="calendar-grid">
+      <div class="day-header" *ngFor="let day of daysOfWeek">{{ day }}</div>
+      <div 
+        *ngFor="let day of getDaysInMonth()"
+        class="calendar-day"
+        [class.today]="isToday(day)"
+        [class.other-month]="!isCurrentMonth(day)"
+        [class.holiday]="isHoliday(day)"
+        [class.selected]="selectedDate() && day.getTime() === selectedDate()!.getTime()"
+        (click)="selectDate(day)"
+        [title]="isHoliday(day) ? isHoliday(day)!.name : ''"
+      >
+        <span class="day-number">{{ day.getDate() }}</span>
+        <span class="holiday-indicator" *ngIf="isHoliday(day)">●</span>
+      </div>
+    </div>
+    
+    <div class="holidays-list">
+      <h3>Holidays this Month</h3>
+      <div class="holiday-item" *ngFor="let holiday of getHolidaysForMonth()">
+        <span class="holiday-date">{{ holiday.date.getDate() }} {{ monthNames[holiday.date.getMonth()] }}</span>
+        <span class="holiday-name">{{ holiday.name }}</span>
+        <span class="holiday-type" [class.national]="holiday.type === 'national'" 
+              [class.religious]="holiday.type === 'religious'"
+              [class.regional]="holiday.type === 'regional'">
+          {{ holiday.type }}
+        </span>
+      </div>
+      <p class="no-holidays" *ngIf="getHolidaysForMonth().length === 0">No holidays this month</p>
+    </div>
+    
+    <button class="close-button" (click)="closeCalendar()" type="button">Close</button>
+  </div>
+</div>
