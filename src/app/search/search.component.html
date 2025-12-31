@@ -1,20 +1,113 @@
 <div class="search-container">
   <input type="text" [(ngModel)]="city" placeholder="Enter city name" class="search-input" (keyup.enter)="searchWeather()">
-  <button (click)="searchWeather()" class="search-button">
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <button (click)="searchWeather()" class="search-button" [disabled]="loading">
+    <svg *ngIf="!loading" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="11" cy="11" r="8"></circle>
       <path d="m21 21-4.35-4.35"></path>
     </svg>
+    <span *ngIf="loading" class="spinner-small"></span>
   </button>
 </div>
 
 <div *ngIf="error" class="error">{{ error }}</div>
 
-<div *ngIf="weatherData" class="weather-display">
-  <h2>{{ weatherData.name }}</h2>
-  <p>Temperature: {{ weatherData.main.temp }}°C</p>
-  <p>Feels like: {{ weatherData.main.feels_like }}°C</p>
-  <p>Humidity: {{ weatherData.main.humidity }}%</p>
-  <p>Description: {{ weatherData.weather[0].description }}</p>
-  <img *ngIf="weatherData.weather[0].icon" [src]="'http://openweathermap.org/img/wn/' + weatherData.weather[0].icon + '@2x.png'" alt="Weather icon">
+<div *ngIf="weatherData && !loading" class="weather-container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'current'"
+      (click)="setActiveTab('current')">
+      Current Weather
+    </button>
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'timeline'"
+      (click)="setActiveTab('timeline')">
+      Timeline (Past & Future)
+    </button>
+  </div>
+
+  <!-- Current Weather Tab -->
+  <div *ngIf="activeTab === 'current'" class="tab-content">
+    <div class="weather-display">
+      <div class="weather-header">
+        <h2>{{ weatherData.name }}</h2>
+        <p class="current-time">{{ getCurrentDateString() }}</p>
+      </div>
+      
+      <div class="weather-main">
+        <div class="temperature-section">
+          <div class="temp-value">{{ roundTemp(weatherData.main.temp) }}°C</div>
+          <div class="feels-like" *ngIf="weatherData.main.feels_like">Feels like {{ roundTempSafe(weatherData.main.feels_like) }}°C</div>
+        </div>
+        
+        <div class="weather-icon-section">
+          <img *ngIf="weatherData.weather[0].icon" 
+               [src]="'http://openweathermap.org/img/wn/' + weatherData.weather[0].icon + '@2x.png'" 
+               alt="Weather icon"
+               class="weather-icon-large">
+          <p class="description">{{ capitalize(weatherData.weather[0].description) }}</p>
+        </div>
+      </div>
+
+      <div class="weather-details">
+        <div class="detail-item">
+          <span class="detail-label">Humidity</span>
+          <span class="detail-value">{{ weatherData.main.humidity }}%</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Pressure</span>
+          <span class="detail-value">{{ weatherData.main.pressure }} hPa</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline Tab -->
+  <div *ngIf="activeTab === 'timeline'" class="tab-content">
+    <div class="timeline-container">
+      <h3 class="timeline-title">Weather Timeline for {{ weatherData.name }}</h3>
+      
+      <div class="timeline">
+        <div *ngFor="let weather of historicalWeather" 
+             class="timeline-item" 
+             [class.past]="weather.type === 'past'"
+             [class.current]="weather.type === 'current'"
+             [class.future]="weather.type === 'future'">
+          
+          <div class="timeline-marker" [class.current-marker]="weather.type === 'current'"></div>
+          
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="timeline-time">{{ weather.time }}</span>
+              <span class="timeline-date">{{ weather.date }}</span>
+              <span class="timeline-badge" [class.past-badge]="weather.type === 'past'"
+                                           [class.current-badge]="weather.type === 'current'"
+                                           [class.future-badge]="weather.type === 'future'">
+                {{ weather.type === 'past' ? 'Past' : weather.type === 'current' ? 'Now' : 'Future' }}
+              </span>
+            </div>
+            
+            <div class="timeline-weather">
+              <div class="timeline-temp">{{ weather.temperature }}°C</div>
+              <img *ngIf="weather.icon" 
+                   [src]="'http://openweathermap.org/img/wn/' + weather.icon + '.png'" 
+                   alt="Weather icon"
+                   class="timeline-icon">
+              <div class="timeline-details">
+                <p class="timeline-desc">{{ capitalize(weather.description) }}</p>
+                <p class="timeline-humidity">Humidity: {{ weather.humidity }}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="loading" class="loading-container">
+  <div class="spinner"></div>
+  <p>Loading weather data...</p>
 </div>

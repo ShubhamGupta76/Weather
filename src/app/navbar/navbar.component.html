@@ -2,20 +2,36 @@
   <div class="navbar-brand">
     <a routerLink="/">Weather App</a>
   </div>
-  <ul class="navbar-nav">
-    <li><a routerLink="/">Home</a></li>
-    <li><a routerLink="/login">Login</a></li>
-    <li><a routerLink="/register">Register</a></li>
-    <li>
-      <button class="calendar-icon-btn" (click)="calendar.toggle()" type="button" title="View Calendar">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-      </button>
-    </li>
-  </ul>
+  
+  <div class="navbar-content">
+    <div class="state-temps-row">
+      <div *ngFor="let state of stateTemps" class="state-temp-item">
+        <span *ngIf="state.loading" class="loading-dot">●</span>
+        <span *ngIf="!state.loading" class="state-name">{{ state.state }}</span>
+        <span *ngIf="!state.loading" class="temp">{{ state.temperature }}°C</span>
+        <img *ngIf="!state.loading && state.icon" 
+             [src]="'http://openweathermap.org/img/wn/' + state.icon + '.png'" 
+             alt="Weather icon"
+             class="temp-icon">
+      </div>
+    </div>
+    
+    <ul class="navbar-nav">
+      <li><a routerLink="/">Home</a></li>
+      <li><a routerLink="/all-states" class="all-states-btn">All States</a></li>
+      <li><a routerLink="/login">Login</a></li>
+      <li><a routerLink="/register">Register</a></li>
+      <li>
+        <button class="calendar-icon-btn" (click)="calendar.toggle()" type="button" title="View Calendar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </button>
+      </li>
+    </ul>
+  </div>
   <app-calendar #calendar></app-calendar>
 </nav>
