@@ -23,6 +23,74 @@
       </div>
     </div>
     
+    <!-- Weather Search Section -->
+    <div class="weather-search-section" *ngIf="selectedDate()">
+      <div class="selected-date-info">
+        <h3>Selected Date: {{ getSelectedDateString() }}</h3>
+        <div class="weather-search-form">
+          <input 
+            type="text" 
+            [(ngModel)]="cityName" 
+            placeholder="Enter city name to check weather"
+            class="city-input"
+            (keyup.enter)="searchWeather()"
+          />
+          <button class="search-weather-btn" (click)="searchWeather()" [disabled]="weatherLoading()" type="button">
+            <span *ngIf="!weatherLoading()">Search</span>
+            <span *ngIf="weatherLoading()">Loading...</span>
+          </button>
+        </div>
+        <div class="weather-error" *ngIf="weatherError()">{{ weatherError() }}</div>
+      </div>
+      
+      <!-- Weather Display -->
+      <div class="weather-display" *ngIf="weatherData() && !weatherLoading()">
+        <div class="weather-header">
+          <h4>{{ weatherData()!.name || 'Weather' }}</h4>
+          <span class="weather-date">{{ getSelectedDateString() }}</span>
+        </div>
+        <div class="weather-main">
+          <div class="weather-icon-temp">
+            <img 
+              *ngIf="weatherData()!.weather[0].icon" 
+              [src]="'http://openweathermap.org/img/wn/' + weatherData()!.weather[0].icon + '@2x.png'" 
+              alt="Weather icon"
+              class="weather-icon"
+            />
+            <div class="temp-display">
+              <span class="temperature">{{ roundTemp(weatherData()!.main.temp) }}°C</span>
+              <span class="feels-like" *ngIf="weatherData()!.main.feels_like !== undefined">
+                Feels like {{ roundTemp(weatherData()!.main.feels_like!) }}°C
+              </span>
+            </div>
+          </div>
+          <div class="weather-description">
+            {{ capitalize(weatherData()!.weather[0].description) }}
+          </div>
+        </div>
+        <div class="weather-details">
+          <div class="detail-item">
+            <span class="detail-label">Humidity</span>
+            <span class="detail-value">{{ weatherData()!.main.humidity }}%</span>
+          </div>
+          <div class="detail-item" *ngIf="weatherData()!.main.temp_min && weatherData()!.main.temp_max">
+            <span class="detail-label">Min/Max</span>
+            <span class="detail-value">
+              {{ roundTemp(weatherData()!.main.temp_min!) }}° / {{ roundTemp(weatherData()!.main.temp_max!) }}°
+            </span>
+          </div>
+          <div class="detail-item" *ngIf="weatherData()!.main.pressure">
+            <span class="detail-label">Pressure</span>
+            <span class="detail-value">{{ weatherData()!.main.pressure }} hPa</span>
+          </div>
+          <div class="detail-item" *ngIf="weatherData()!.wind?.speed">
+            <span class="detail-label">Wind Speed</span>
+            <span class="detail-value">{{ weatherData()!.wind!.speed }} m/s</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <div class="holidays-list">
       <h3>Holidays this Month</h3>
       <div class="holiday-item" *ngFor="let holiday of getHolidaysForMonth()">

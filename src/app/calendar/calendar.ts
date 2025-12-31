@@ -1,5 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 interface Holiday {
   name: string;
@@ -7,9 +10,28 @@ interface Holiday {
   type: 'national' | 'religious' | 'regional';
 }
 
+interface WeatherResponse {
+  main: {
+    temp: number;
+    feels_like?: number;
+    temp_min?: number;
+    temp_max?: number;
+    humidity: number;
+    pressure?: number;
+  };
+  weather: {
+    description: string;
+    icon: string;
+  }[];
+  name?: string;
+  wind?: {
+    speed: number;
+  };
+}
+
 @Component({
   selector: 'app-calendar',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './calendar.html',
   styleUrl: './calendar.scss'
 })
@@ -17,6 +39,10 @@ export class Calendar {
   currentDate = signal(new Date());
   selectedDate = signal<Date | null>(null);
   showCalendar = signal(false);
+  cityName = '';
+  weatherData = signal<WeatherResponse | null>(null);
+  weatherLoading = signal(false);
+  weatherError = signal('');
   
   // Indian Holidays for 2025
   holidays: Holiday[] = [
@@ -48,6 +74,8 @@ export class Calendar {
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
   ];
+
+  constructor(private http: HttpClient) {}
 
   getDaysInMonth(): Date[] {
     const year = this.currentDate().getFullYear();
@@ -106,7 +134,48 @@ export class Calendar {
   selectDate(date: Date): void {
     if (this.isCurrentMonth(date)) {
       this.selectedDate.set(date);
+      this.weatherData.set(null);
+      this.weatherError.set('');
+      this.cityName = '';
     }
+  }
+
+  searchWeather(): void {
+    const city = this.cityName.trim();
+    const selected = this.selectedDate();
+    
+    if (!city) {
+      this.weatherError.set('Please enter a city name');
+      return;
+    }
+    
+    if (!selected) {
+      this.weatherError.set('Please select a date first');
+      return;
+    }
+    
+    this.weatherError.set('');
+    this.weatherLoading.set(true);
+    this.weatherData.set(null);
+    
+    this.http.get<WeatherResponse>(`${environment.apiBaseUrl}/api/weather/${city}`)
+      .subscribe({
+        next: (data) => {
+          this.weatherData.set(data);
+          this.weatherLoading.set(false);
+        },
+        error: (err) => {
+          this.weatherError.set('Failed to fetch weather data. Please try again.');
+          this.weatherLoading.set(false);
+          console.error('Weather API error:', err);
+        }
+      });
+  }
+
+  getSelectedDateString(): string {
+    const selected = this.selectedDate();
+    if (!selected) return '';
+    return `${this.monthNames[selected.getMonth()]} ${selected.getDate()}, ${selected.getFullYear()}`;
   }
 
   getHolidaysForMonth(): Holiday[] {
@@ -119,9 +188,22 @@ export class Calendar {
 
   closeCalendar(): void {
     this.showCalendar.set(false);
+    this.selectedDate.set(null);
+    this.weatherData.set(null);
+    this.cityName = '';
+    this.weatherError.set('');
   }
 
   toggle(): void {
     this.showCalendar.set(!this.showCalendar());
+  }
+
+  roundTemp(temp: number): number {
+    return Math.round(temp);
+  }
+
+  capitalize(text: string): string {
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
   }
 }
